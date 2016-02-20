@@ -1,0 +1,1 @@
+This folder is created to add in various additional features for our project.  Each feature will likely have associated information with it and we will decide later if we need to add any of these.  I want to encourage new ideas, but at the same time ensure that we focus on what we need to have done.
