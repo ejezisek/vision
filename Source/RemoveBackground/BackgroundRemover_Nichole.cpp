@@ -12,7 +12,7 @@
 //C
 #include <stdio.h>
 //C++
-#include "Points.h"
+#include "Points.hpp"
 #include <iostream>
 #include <sstream>
 using namespace cv;
@@ -28,8 +28,8 @@ void processVideo(char* videoFilename);
 Mat MomentMat;
 int defaultErosionSize = 5;
 int numDilations = 1;
-int backgroundFilterAmmount = 5;
-int numFramesToRemember = 100;
+int backgroundFilterAmmount = 0;
+int numFramesToRemember = 1;
 int waitAmmount = 1;
 string face_cascade_path;
 bool getNextFrame(int frameNumber)
@@ -40,19 +40,23 @@ int main(int argc, char* argv[])
 {
 	//check for the input parameter correctness
 	//create GUI windows
+	cout<<"-------------"<<endl<<"Hello world"<<endl;
+	cout<<"-------------"<<endl<<argv[1]<<endl;
 	namedWindow("Frame");
 	namedWindow("FG Mask MOG 2");
 	//create Background Subtractor objects
 	pMOG2 = createBackgroundSubtractorMOG2(numFramesToRemember, backgroundFilterAmmount, false); //MOG2 approach
 																								 //pMOG2 = createBackgroundSubtractorMOG2();
 																								 //pMOG2 = createBackgroundSubtractorKNN(5000, 16, false); //MOG2 approach
-	face_cascade_path = "C:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
+	face_cascade_path = string("haarcascade_frontalface_alt.xml");
+
 	processVideo(argv[1]);
 	//destroy GUI windows
 	destroyAllWindows();
 	return EXIT_SUCCESS;
 }
 void processVideo(char* videoFilename) {
+	cout<<videoFilename<<"Why does this not work?"<<endl;
 	//create the capture object
 	VideoCapture capture(videoFilename);
 	if (!capture.isOpened()) {
@@ -90,12 +94,13 @@ void processVideo(char* videoFilename) {
 		std::vector<std::vector<Point> > oaoa;
 
 		int erosion_size = defaultErosionSize;
-		Mat element = getStructuringElement(0, Size(2 * erosion_size + 1, 2 * erosion_size + 1), Point(erosion_size, erosion_size));
+/*		Mat element = getStructuringElement(0, Size(2 * erosion_size + 1, 2 * erosion_size + 1), Point(erosion_size, erosion_size));
 		erode(fgMaskMOG2, fgMaskMOG2, element);
 		for (int i = 0; i<numDilations; i++)
 		{
 			dilate(fgMaskMOG2, fgMaskMOG2, element);
 		}
+*/
 		int i = 1;
 
 		//show the current frame and the fg masks
@@ -110,6 +115,8 @@ void processVideo(char* videoFilename) {
 		vector<Rect_<int> > faces;
 		detectFaces(frame, faces, face_cascade_path);
 
+		if(faces.size()>0)
+		{
 		Rect face = faces[0];
 		Mat faceImg = frame.clone();
 		ellipse(faceImg, RotatedRect(Point(face.x + (face.width/2), face.y + (face.height/2)), Size(face.width*.8, face.height*.8), 0),
@@ -128,6 +135,7 @@ void processVideo(char* videoFilename) {
 					//fgMaskMOG2.at<uchar>(Point(j, i)) = 0;
 				}
 			}
+		}
 		}
 
 		imshow("FG Mask MOG 2", display);
