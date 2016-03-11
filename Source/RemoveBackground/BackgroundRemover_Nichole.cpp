@@ -28,8 +28,8 @@ void processVideo(char* videoFilename);
 Mat MomentMat;
 int defaultErosionSize = 5;
 int numDilations = 1;
-int backgroundFilterAmmount = 0;
-int numFramesToRemember = 1;
+int backgroundFilterAmmount = 100;
+int numFramesToRemember = 200;
 int waitAmmount = 1;
 string face_cascade_path;
 bool getNextFrame(int frameNumber)
@@ -115,30 +115,24 @@ void processVideo(char* videoFilename) {
 		vector<Rect_<int> > faces;
 		detectFaces(frame, faces, face_cascade_path);
 
+		Mat faceImg = frame.clone();
+		Mat m=frame.clone();
 		if(faces.size()>0)
 		{
 		Rect face = faces[0];
-		Mat faceImg = frame.clone();
-		ellipse(faceImg, RotatedRect(Point(face.x + (face.width/2), face.y + (face.height/2)), Size(face.width*.8, face.height*.8), 0),
-			Scalar(255, 0, 0), -1, 4);
-		for (int i = 0; i < faceImg.rows; i++)
-		{
-			for (int j = 0; j < faceImg.cols; j++)
-			{
-				Vec3b color = faceImg.at<Vec3b>(Point(j, i));
-				if (color.val[0] == 255 && color.val[1] == 0 && color.val[2] == 0)
-				{
-					display.at<Vec3b>(Point(j, i)) = frame.at<Vec3b>(Point(j, i));
-				}
-				else
-				{
-					//fgMaskMOG2.at<uchar>(Point(j, i)) = 0;
-				}
-			}
-		}
+		faceImg.setTo(Scalar(0, 0, 0));
+		int width=face.width;
+		int height=face.height;
+		ellipse(faceImg, RotatedRect(Point(face.x + (width/2), face.y + (height/2)), Size(width,height), 0),
+			Scalar(255, 255, 255), -1, 4);
+		ellipse(display, RotatedRect(Point(face.x + (width/2), face.y + (height/2)), Size(width,height), 0),
+			Scalar(0, 0, 0), -1, 4);
+
+		m=frame&faceImg;
+		Mat disp=m|display;
+		imshow("FG Mask MOG 2", disp);
 		}
 
-		imshow("FG Mask MOG 2", display);
 		imshow("Frame", frame);
 		moveWindow("Frame", 0, 500);
 		//get the input from the keyboard
