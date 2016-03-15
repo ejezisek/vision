@@ -25,12 +25,31 @@ void processVideo(char* videoFilename);
 Mat MomentMat;
 int defaultErosionSize=5;
 int numDilations=1;
-int backgroundFilterAmmount=5;
+int backgroundFilterAmmount=1000;
 int numFramesToRemember=100;
 int waitAmmount=1;
 bool getNextFrame(int frameNumber)
 {
 	return frameNumber<30;
+}
+void drawContours(Mat &source, Mat& dest)
+{
+		Mat source_gray;
+		cvtColor(source, source_gray, CV_BGR2GRAY);
+		const int max_BINARY_value=255;
+		adaptiveThreshold(source_gray, source_gray, max_BINARY_value, CV_ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 3, -2);
+	    std::vector<std::vector<Point> > oaoa;
+	    findContours(source_gray, oaoa, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
+		int i=0;
+		for( std::vector<std::vector<Point> >::iterator iterator=oaoa.begin(); iterator!=oaoa.end(); iterator++, i++)
+    {
+			std::vector<Point> p=*iterator;
+			const Point *points[1]= {&p[0]};
+			const int lineType=8;
+			int npt[]={(int)p.size()};
+			fillPoly(dest, points, npt, 1, CV_RGB(255*abs(sin(i*i*.0174533)),255*abs(cos(i*i*i*.0174533)),i), lineType);	
+		}
+	
 }
 int main(int argc, char* argv[])
 {
@@ -49,7 +68,9 @@ int main(int argc, char* argv[])
 }
 void processVideo(char* videoFilename) {
     //create the capture object
-    VideoCapture capture(videoFilename);
+		String s("../Testing/Input/");
+		s+=videoFilename;
+    VideoCapture capture(s);
     if(!capture.isOpened()){
         //error in opening the video input
         cerr << "Unable to open video file: " << videoFilename << endl;
@@ -60,8 +81,6 @@ void processVideo(char* videoFilename) {
     while( (char)keyboard != 'q' && (char)keyboard != 27 ){
         //read the current frame
         if(!capture.read(frame)) {
-            cerr << "Unable to read next frame." << endl;
-            cerr << "Exiting..." << endl;
 						break;
         }
         //get the frame number and write it on the current frame
@@ -84,13 +103,6 @@ void processVideo(char* videoFilename) {
 				//find the contours of fgMaskMOG2
 				std::vector<std::vector<Point> > oaoa;
 				
-				int erosion_size=defaultErosionSize;
-				Mat element = getStructuringElement(0, Size(2*erosion_size+1, 2*erosion_size+1), Point(erosion_size, erosion_size));
-				erode(fgMaskMOG2, fgMaskMOG2, element);
-				for(int i=0; i<numDilations; i++)
-				{
-				dilate(fgMaskMOG2, fgMaskMOG2, element);
-				}
 				int i=1;
         //show the current frame and the fg masks
 				Mat masked=fgMaskMOG2.clone();
@@ -99,8 +111,21 @@ void processVideo(char* videoFilename) {
 				display=frame & masked;
 				display=display.clone();
 				display.setTo(Scalar(255, 0, 0), ~fgMaskMOG2);
+				//Mat temp=frame.clone();
+				//temp.convertTo(temp, CV_32S);
+				//Mat labels(temp.size(), CV_32S);
+				//connectedComponents(temp, labels, 8, CV_32S);
+//				Mat frameConts=frame.clone();
+//				drawContours(frame, frameConts);
+//				imshow("Contours", frameConts);
+//				drawContours(display, display);
         imshow("FG Mask MOG 2", display);
+		const int max_BINARY_value=255;
+			Mat bw;
+		cvtColor(frame, bw, CV_BGR2GRAY);
+//		adaptiveThreshold(bw, bw, max_BINARY_value, CV_ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);
         imshow("Frame", frame);
+//        imshow("Black and White", bw);
 				moveWindow("Frame", 0, 500);
         //get the input from the keyboard
         keyboard = waitKey( waitAmmount );

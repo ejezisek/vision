@@ -50,14 +50,16 @@ vector<vector<Point> > contr, contrR, contrG, contrB;
 vector<Vec4i> hierarchy;
 vector<Point2f>center;
 
-int main()
+int main(int argc, char *argv[])
 {	
 	// Windows
+	String videoName="../Testing/Input/";
+	videoName+=argv[1];
 	namedWindow("Capture Vid", WINDOW_AUTOSIZE);
 	namedWindow("Output Vid", WINDOW_AUTOSIZE);
 	
 	// Read Image
-	VideoCapture camFeed(input_3);
+	VideoCapture camFeed(videoName);
 
 	/*/ Set up output
 	VideoWriter video_out(out2, camFeed.get(CV_CAP_PROP_FOURCC), 
