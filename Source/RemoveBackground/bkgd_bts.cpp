@@ -33,12 +33,13 @@ Mat notDiff, xorFrame;
 Mat faceFrame, noiseBkgd;
 
 // Var Def
+int largestContr = 0;
 double i, k, alpha, beta;
-double polyTest, radius;
+double polyTest, radius, perOn;
 bool ret = false;
 char strCount[200];
 const String& input_1 = "brian_test.avi";
-const String& input_2 = "TestInput2.avi";
+const String& input_2 = "brian_test.mp4";
 const String& input_3 = "Brian_test2.mp4";
 const String& out1 = "output1.mp4";
 const String& out2 = "output2.mp4";
@@ -55,17 +56,11 @@ int main(int argc, char *argv[])
 	// Windows
 	String videoName="../Testing/Input/";
 	videoName+=argv[1];
-	namedWindow("Capture Vid", WINDOW_AUTOSIZE);
+	//namedWindow("Capture Vid", WINDOW_AUTOSIZE);
 	namedWindow("Output Vid", WINDOW_AUTOSIZE);
 	
 	// Read Image
 	VideoCapture camFeed(videoName);
-
-	/*/ Set up output
-	VideoWriter video_out(out2, camFeed.get(CV_CAP_PROP_FOURCC), 
-		camFeed.get(CV_CAP_PROP_FPS), 
-		Size(camFeed.get(CV_CAP_PROP_FRAME_WIDTH), camFeed.get(CV_CAP_PROP_FRAME_HEIGHT)));
-		*/
 	
    if (!camFeed.isOpened())  // if not success, exit program
    {
@@ -83,7 +78,7 @@ int main(int argc, char *argv[])
      		break;
 		}
 		
-		imshow("Capture Vid", frame);
+		//imshow("Capture Vid", frame);
 
 		// Set first frame
 		if (backGround.empty()){
@@ -104,86 +99,66 @@ int main(int argc, char *argv[])
 		alpha = ((k-1)/k);
 		beta  = (1/k);
 		addWeighted(backGround, alpha, frame, beta, 0.0, backGround);
-		
-		// Use weighted frames to show face (testing feature..not really used)
-		if (i >= 300)
-		{
-			if (i == 300)
-			{
-				faceFrame = frame.clone();
-			}
-		
-			if (i >= 300 + 50)
-			{
-				k = 50;
-			}
-			else
-			{
-				k = i - 300;
-			}
-		//k = i * 100;
-		alpha = ((k-5)/k);
-		beta  = (5/k);
-		addWeighted(faceFrame, alpha, frame, beta, 0.0, faceFrame);
-		}
-
-		/*/ Debug *******************************
-		namedWindow("Background", WINDOW_AUTOSIZE);
-		imshow("Background", backGround);
-		// Debug *******************************/
-		
-		//compare(faceFrame, backGround, tBall, CMP_GE);
-		/*/ Debug *******************************
-		namedWindow("face", WINDOW_AUTOSIZE);
-		imshow("face", tBall);
-		// Debug *******************************/
 
 		cvtColor(frame, frmGray, COLOR_BGR2GRAY);
 		cvtColor(backGround, bkgdGray, COLOR_BGR2GRAY);
 
+		se = getStructuringElement( MORPH_RECT, Size( 1, 4 ), //remove bkgd noise
+				Point( -1, -1 ) );
+		erode (bkgdGray, bkgdGray, se, Point(-1, -1), 1, 1, 1);
+		dilate(bkgdGray, bkgdGray, se, Point(-1, -1), 1, 1, 1);
+
 		absdiff(bkgdGray, frmGray, diffGray);
-
-		// Only run if motion is present
-		if (sum(diffGray)[0] < 10000)
-		{
-			se = getStructuringElement( MORPH_RECT, Size( 2, 6 ), //fill
-               Point( -1, -1 ) );
-			erode (diffGray, noiseBkgd, se, Point(-1, -1), 2, 1, 1);
-			dilate(noiseBkgd, noiseBkgd, se, Point(-1, -1), 2, 1, 1);
-
-			noiseBkgd = diffGray.clone();
-		}
-		bitwise_xor(diffGray, noiseBkgd, diffGray);
 		
 		threshold(diffGray, notDiff, 20, 255, THRESH_BINARY);
-		
-		xorFrame = notDiff.clone();
-		if (sum(notDiff)[0] > 300)
-		{
 
-		// Track Person
-		cntrIn = xorFrame.clone();
-		findContours(cntrIn, contrR, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+		// Only run if motion is present (ie > 15% of frame)
+		perOn = (double)(countNonZero(notDiff)) / (double)((notDiff.cols * notDiff.rows));
+		if (perOn > 0.14)
+		{
+			erode (diffGray, diffGray, se, Point(-1, -1), 1, 1, 1);
+			dilate(diffGray, diffGray, se, Point(-1, -1), 3, 1, 1);
+
+			se = getStructuringElement( MORPH_RECT, Size( 4, 1 ), //remove bkgd noise
+				   Point( -1, -1 ) );
+			erode (diffGray, diffGray, se, Point(-1, -1), 1, 1, 1);
+			dilate(diffGray, diffGray, se, Point(-1, -1), 3, 1, 1);
+
+			//bitwise_xor(diffGray, noiseBkgd, diffGray);
 		
-		for(int c = 0; c < contrR.size(); c++){
-			bounding_face = boundingRect(contrR[c]);
-			drawContours( frame, contrR, c, Scalar(0,255,0), 1, 8, hierarchy, 0, Point() );
-			polyTest = pointPolygonTest(contrR[c], ctr, false);
-		}
+			threshold(diffGray, notDiff, 20, 255, THRESH_BINARY);
+		
+			xorFrame = notDiff.clone();
+
+			// Track Person
+			cntrIn = xorFrame.clone();
+			findContours(cntrIn, contrR, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+		
+			for(int c = 0; c < contrR.size(); c++)
+			{
+				if(contrR[c].size() >= largestContr)
+				{
+					bounding_face = boundingRect(contrR[c]);
+					//drawContours( frame, contrR, c, Scalar(0,255,0), 1, 8, hierarchy, 0, Point() );
+					//rectangle(frame, bounding_face, Scalar(0,255,0),2, 8,0);
+					//polyTest = pointPolygonTest(contrR[c], ctr, false);
+					largestContr = contrR[c].size();
+				}
+			}
+			rectangle(frame, bounding_face, Scalar(0,255,0),2, 8,0);
+			largestContr = 0;
+
 		/*/ Debug *******************************
 		namedWindow("xorFrame", WINDOW_AUTOSIZE);
 		imshow("xorFrame", xorFrame);
 		// Debug *******************************/
 		}
-
-		//bitwise_not(diffGray, notDiff);
-		//bitwise_xor(notDiff, frame, xorFrame);
 		
-		// Debug *******************************
+		/*/ Debug *******************************
 		namedWindow("notDiff", WINDOW_AUTOSIZE);
 		imshow("notDiff", notDiff);
 		// Debug *******************************/
-		// Debug *******************************
+		/*/ Debug *******************************
 		namedWindow("No Bkgd", WINDOW_AUTOSIZE);
 		imshow("No Bkgd", diffGray);
 		// Debug *******************************/
