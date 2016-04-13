@@ -1,0 +1,2 @@
+/home/edward/Dropbox/Classes/CprE_575_Computational_Perception/CPRE 575 Group Project/gitRepo/Source/FaceTracking/UnitTests/CMakeFiles/Display.dir
+/home/edward/Dropbox/Classes/CprE_575_Computational_Perception/CPRE 575 Group Project/gitRepo/Source/FaceTracking/UnitTests/CMakeFiles/FaceTest.dir

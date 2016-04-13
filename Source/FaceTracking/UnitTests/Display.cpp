@@ -25,14 +25,14 @@ int numFramesToRemember=100;
 int waitAmmount=0;
 Mat frame;
 Mat lastProcessed;
-void setRectInMask(Mat &mask,Mat &image,  Rect &rect)
+void setRectInMask(Mat &mask, Rect &rect)
 {
     CV_Assert( !mask.empty() );
     mask.setTo( GC_BGD );
     rect.x = max(0, rect.x);
     rect.y = max(0, rect.y);
-    rect.width = min(rect.width, image.cols-rect.x);
-    rect.height = min(rect.height, image.rows-rect.y);
+    rect.width = min(rect.width, mask.cols-rect.x);
+    rect.height = min(rect.height, mask.rows-rect.y);
     (mask(rect)).setTo( Scalar(GC_PR_FGD) );
 }
 void getBinMask( const Mat& comMask, Mat& binMask )
@@ -49,8 +49,14 @@ void getGrab(Mat &source, Mat &dest, Rect& rect)
 	dest.create(source.size(), CV_8UC1);
 	if(!dest.empty())
 	dest.setTo(Scalar::all(GC_BGD));
-	setRectInMask(dest,source, rect);
-  grabCut(source, dest, rect, bgM, fgModel, 1);
+	rect.width=source.cols-5;
+	rect.x=5;
+	rect.height=source.rows-10;
+	rect.y=10;
+	setRectInMask(dest, rect);
+	cout<<"THE RECT IS: "<<rect<<endl;
+	fgModel	= source.clone();
+  grabCut(source, dest, rect, bgM, fgModel, 5);
 	getBinMask(dest, dest);
 }
 
@@ -65,7 +71,7 @@ void getImages(Mat & source, Mat &dst, Rect& r)
 				Mat face=mask.clone();
 				Mat facecropped=cropped(rect);				
 
-				rect.height/=3;
+/*				rect.height/=3;
 				getGrab(cropped, mask, rect);
 				Mat hair=mask.clone();
 				Mat haircropped=cropped(rect);				
@@ -74,8 +80,8 @@ void getImages(Mat & source, Mat &dst, Rect& r)
 				getGrab(cropped, mask, rect);
 				Mat shirt=mask.clone();
 				//cropped.copyTo(shirt, mask);
-
-				Mat totalMask=shirt|hair|face;	
+*/
+				Mat totalMask=face;	
 				cropped.copyTo(dst, totalMask);
 				Mat white=cropped.clone();
 				white.setTo(Scalar(255, 255, 255));
@@ -155,12 +161,11 @@ int main(int argc, char* argv[])
 }
 void processFrame(Mat & frame)
 {
+	cout<<frame.size();
 				f->update(frame);
 				f->update(frame);
 				Rect rect;
-				cout<<f->numFaces()<<endl;
-				cout<<f->numFaces()<<endl;
-				if(f->numFaces()!=0)
+				//if(f->numFaces()!=0)
 				{
 				f->getFace(frame, rect);
 				Mat res;
@@ -170,14 +175,15 @@ void processFrame(Mat & frame)
 				//colorReduce(newFace, 64);
 				Mat cropped=frame(rect);				
         //get the frame number and write it on the current frame
-				if(cropped.rows>0 && cropped.cols>0)
+				//if(cropped.rows>0 && cropped.cols>0)
 				{
 				cout<<rect<<endl;
 				cout<<frame.size()<<endl;
 				waitKey( waitAmmount );
-        imshow("Frame", cropped);
-					if(res.rows>0 && res.cols>0)
+        //imshow("Frame", cropped);
+					//if(res.rows>0 && res.cols>0)
 					{
+					cout<<"SHOWING GRABCUT";
        			imshow("Grab Cut", res);
 						lastProcessed=res;
 					}

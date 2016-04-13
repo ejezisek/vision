@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/edward/Dropbox/Classes/CprE_575_Computational_Perception/CPRE 575 Group Project/gitRepo/Source/GrabCut/grabcut.cpp
+opencv2/imgcodecs.hpp
+/home/edward/Dropbox/Classes/CprE_575_Computational_Perception/CPRE 575 Group Project/gitRepo/Source/GrabCut/opencv2/imgcodecs.hpp
+opencv2/highgui/highgui.hpp
+/home/edward/Dropbox/Classes/CprE_575_Computational_Perception/CPRE 575 Group Project/gitRepo/Source/GrabCut/opencv2/highgui/highgui.hpp
+opencv2/imgproc/imgproc.hpp
+/home/edward/Dropbox/Classes/CprE_575_Computational_Perception/CPRE 575 Group Project/gitRepo/Source/GrabCut/opencv2/imgproc/imgproc.hpp
+iostream
+-
+
