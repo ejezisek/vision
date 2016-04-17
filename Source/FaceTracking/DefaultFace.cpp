@@ -22,8 +22,8 @@ void DefaultFace::getFace(Mat &disp, Rect & rect)
 	{
 		Rect face = faces[0];
 		rect=face;
-    int width=face.width*1.2;
-    int height=face.height*2.7;
+    int width=face.width;
+    int height=face.height;
 		int x=face.x;
 		int y=face.y;
 		int diff=x+width-disp.cols;
