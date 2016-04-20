@@ -55,7 +55,6 @@ void getGrab(Mat &source, Mat &dest, Rect& rect)
 	rect.y=10;
 	setRectInMask(dest, rect);
 	cout<<"THE RECT IS: "<<rect<<endl;
-	fgModel	= source.clone();
   grabCut(source, dest, rect, bgM, fgModel, 5);
 	getBinMask(dest, dest);
 }
